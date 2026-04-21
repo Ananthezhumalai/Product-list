@@ -104,8 +104,8 @@ router.get('/', async (req, res) => {
     let query = db('products');
     
     if (q) {
-      query = query.where('name', 'ilike', `%${q}%`)
-                   .orWhere('description', 'ilike', `%${q}%`);
+      query = query.where('name', 'like', `%${q}%`)
+                   .orWhere('description', 'like', `%${q}%`);
     }
 
     const { count } = await query.clone().count('* as count').first();

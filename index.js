@@ -39,12 +39,19 @@ app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use('/api/products', require('./routes/products'));
 
 // Catch-all route to serve the frontend (since it's a minimal single-page app or static pages)
-app.get('*', (req, res) => {
+// app.get('/*', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// });
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
-
 // Start server
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-  console.log(`Swagger docs available at http://localhost:${port}/api/docs`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+    console.log(`Swagger docs available at http://localhost:${port}/api/docs`);
+  });
+}
+
+// Export for Vercel serverless
+module.exports = app;
