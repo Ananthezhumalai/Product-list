@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>E-Commerce Product Listing</title>
-  <meta name="description" content="Discover premium products with our advanced search and beautifully designed product pages.">
+  <title> Product Listing</title>
+  <meta name="description"
+    content="Discover premium products with our advanced search and beautifully designed product pages.">
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="index.css">
 </head>
+
 <body>
   <header>
-    <div class="logo">Nexus Store</div>
     <nav>
       <button id="nav-store" class="active">Storefront</button>
       <button id="nav-admin">Admin Dashboard</button>
@@ -21,13 +24,14 @@
     <!-- Storefront View -->
     <div id="view-store">
       <div class="search-container">
-        <input type="text" id="search-input" class="form-control" placeholder="Search for products by name or description...">
+        <input type="text" id="search-input" class="form-control"
+          placeholder="Search for products by name or description...">
         <button id="search-btn" class="btn-primary">Search</button>
       </div>
-      
+
       <div id="products-loading" class="hidden">Loading products...</div>
       <div id="products-grid" class="product-grid"></div>
-      
+
       <div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center;">
         <span id="pagination-info" style="color: var(--text-secondary);"></span>
         <div style="display: flex; gap: 1rem;">
@@ -130,7 +134,7 @@
     const searchInput = document.getElementById('search-input');
     const searchBtn = document.getElementById('search-btn');
     const adminTbody = document.getElementById('admin-tbody');
-    
+
     // Navigation
     navStore.addEventListener('click', () => {
       viewStore.classList.remove('hidden');
@@ -153,11 +157,11 @@
       currentPage = page;
       productsGrid.innerHTML = '';
       document.getElementById('products-loading').classList.remove('hidden');
-      
+
       try {
         const res = await fetch(`${API_BASE}?q=${searchQuery}&page=${page}`);
         const data = await res.json();
-        
+
         document.getElementById('products-loading').classList.add('hidden');
         renderProducts(data.data);
         updatePagination(data.pagination);
@@ -171,15 +175,15 @@
         productsGrid.innerHTML = '<p>No products found.</p>';
         return;
       }
-      
+
       products.forEach(p => {
         const card = document.createElement('div');
         card.className = 'product-card';
         card.onclick = () => showProductDetail(p.id);
-        
+
         const imageUrl = (p.images && p.images.length > 0) ? p.images[0] : '';
         const imgHtml = imageUrl ? `<img src="${imageUrl}" alt="${p.name}">` : `<div class="product-image-placeholder">No Image</div>`;
-        
+
         card.innerHTML = `
           <div class="product-image">${imgHtml}</div>
           <div class="product-info">
@@ -197,12 +201,12 @@
       const prev = document.getElementById('prev-page');
       const next = document.getElementById('next-page');
       const info = document.getElementById('pagination-info');
-      
+
       info.textContent = `Page ${pg.page} of ${pg.pages} (Total: ${pg.total})`;
-      
+
       prev.style.display = pg.page > 1 ? 'block' : 'none';
       next.style.display = pg.page < pg.pages ? 'block' : 'none';
-      
+
       prev.onclick = () => fetchProducts(pg.page - 1);
       next.onclick = () => fetchProducts(pg.page + 1);
     }
@@ -224,10 +228,10 @@
       try {
         const res = await fetch(`${API_BASE}/${id}`);
         const p = await res.json();
-        
+
         const content = document.getElementById('detail-content');
         const imageUrl = (p.images && p.images.length > 0) ? p.images[0] : '';
-        
+
         content.innerHTML = `
           <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
             <div style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.3); border-radius: 12px; display:flex; align-items:center; justify-content:center; overflow:hidden;">
@@ -255,7 +259,7 @@
           </div>
         `;
         document.getElementById('detail-modal').classList.add('active');
-      } catch(err) {
+      } catch (err) {
         alert('Error fetching product details');
       }
     }
@@ -269,7 +273,7 @@
       try {
         const res = await fetch(`${API_BASE}?limit=100`);
         const data = await res.json();
-        
+
         adminTbody.innerHTML = '';
         data.data.forEach(p => {
           const tr = document.createElement('tr');
@@ -314,7 +318,7 @@
       try {
         const res = await fetch(`${API_BASE}/${id}`);
         const p = await res.json();
-        
+
         document.getElementById('admin-form-title').textContent = 'Edit Product';
         document.getElementById('form-id').value = p.id;
         document.getElementById('form-sku').value = p.sku;
@@ -324,7 +328,7 @@
         document.getElementById('form-brand').value = p.brand || '';
         document.getElementById('form-image').value = (p.images && p.images.length > 0) ? p.images[0] : '';
         document.getElementById('form-available').checked = p.availability;
-        
+
         adminModal.classList.add('active');
       } catch (err) {
         alert('Error fetching product for edit');
@@ -333,7 +337,7 @@
 
     adminForm.onsubmit = async (e) => {
       e.preventDefault();
-      
+
       const id = document.getElementById('form-id').value;
       const payload = {
         sku: document.getElementById('form-sku').value,
@@ -343,7 +347,7 @@
         brand: document.getElementById('form-brand').value,
         availability: document.getElementById('form-available').checked,
       };
-      
+
       const img = document.getElementById('form-image').value;
       if (img) {
         payload.images = JSON.stringify([img]);
@@ -360,7 +364,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        
+
         if (res.ok) {
           adminModal.classList.remove('active');
           fetchAdminProducts();
@@ -388,4 +392,5 @@
     fetchProducts();
   </script>
 </body>
+
 </html>
