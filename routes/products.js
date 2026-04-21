@@ -6,32 +6,40 @@ const db = require('../db');
 router.get('/', async (req, res) => {
   try {
     const { q, page = 1, limit = 10 } = req.query;
-    const offset = (page - 1) * limit;
+
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 10;
+    const offset = (pageNum - 1) * limitNum;
 
     let query = db('products');
-    
+
     if (q) {
-      query = query.where('name', 'like', `%${q}%`)
-                   .orWhere('description', 'like', `%${q}%`);
+      query = query.where(function () {
+        this.where('name', 'like', `%${q}%`)
+          .orWhere('description', 'like', `%${q}%`);
+      });
     }
 
-    const { count } = await query.clone().count('* as count').first();
-    const total = parseInt(count, 10);
-    
-    const products = await query.select('*').limit(limit).offset(offset);
+    const result = await query.clone().count('* as count').first();
+    const total = parseInt(result.count, 10);
+
+    const products = await query
+      .select('*')
+      .limit(limitNum)
+      .offset(offset);
 
     res.json({
       data: products,
       pagination: {
         total,
-        page: parseInt(page, 10),
-        pages: Math.ceil(total / limit)
+        page: pageNum,
+        pages: Math.ceil(total / limitNum)
       }
     });
 
   } catch (err) {
     console.error("DEBUG:", err);
-    res.status(500).json({ error: err.message || JSON.stringify(err) || "Unknown error" });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -40,9 +48,11 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     let product;
+
     if (!isNaN(id)) {
       product = await db('products').where({ id }).first();
     }
+
     if (!product) {
       product = await db('products').where({ sku: id }).first();
     }
@@ -60,8 +70,13 @@ router.get('/:id', async (req, res) => {
 // POST /api/products
 router.post('/', async (req, res) => {
   try {
-    const [id] = await db('products').insert(req.body).returning('id');
-    const newProduct = await db('products').where('id', typeof id === 'object' ? id.id : id).first();
+    const ids = await db('products').insert(req.body);
+    const id = ids[0];
+
+    const newProduct = await db('products')
+      .where('id', id)
+      .first();
+
     res.status(201).json(newProduct);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -72,11 +87,19 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedRows = await db('products').where({ id }).update(req.body);
+
+    const updatedRows = await db('products')
+      .where({ id })
+      .update(req.body);
+
     if (updatedRows === 0) {
       return res.status(404).json({ error: 'Product not found' });
     }
-    const updatedProduct = await db('products').where({ id }).first();
+
+    const updatedProduct = await db('products')
+      .where({ id })
+      .first();
+
     res.json(updatedProduct);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -87,10 +110,15 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const deletedCount = await db('products').where({ id }).del();
+
+    const deletedCount = await db('products')
+      .where({ id })
+      .del();
+
     if (deletedCount === 0) {
       return res.status(404).json({ error: 'Product not found' });
     }
+
     res.status(204).send();
   } catch (err) {
     res.status(500).json({ error: err.message });

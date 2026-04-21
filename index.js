@@ -3,36 +3,42 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
-const swaggerJsdoc = require('swagger-jsdoc');
 
 const app = express();
-const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
+// Static files
+// const publicPath = path.join(process.cwd(), 'public');
+const publicPath = path.join(__dirname, 'public');
+app.use(express.static(publicPath));
+
+// Swagger
 const swaggerDoc = require('./swaggerDoc');
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
 // Routes
 app.use('/api/products', require('./routes/products'));
 
-// Catch-all route to serve the frontend (since it's a minimal single-page app or static pages)
-// app.get('/*', (req, res) => {
-//   res.sendFile(path.join(__dirname, 'public', 'index.html'));
-// });
+// Catch-all
 app.use((req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const filePath = path.join(publicPath, 'index.html');
+
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      res.status(200).send('API is running');
+    }
+  });
 });
-// Start server
+
+// Local only
 if (process.env.NODE_ENV !== 'production') {
+  const port = process.env.PORT || 3000;
   app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-    console.log(`Swagger docs available at http://localhost:${port}/api/docs`);
+    console.log(`Server running on port ${port}`);
   });
 }
 
-// Export for Vercel serverless
 module.exports = app;

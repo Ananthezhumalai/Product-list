@@ -6,40 +6,47 @@ const path = require('path');
 const dbUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL;
 const isPostgres = dbUrl && dbUrl.startsWith('postgres');
 
-// Vercel Serverless Function SQLite Workaround (Read-Only Filesystem Fix)
-let sqlitePath = './dev.sqlite3';
-if (!isPostgres && process.env.VERCEL) {
+// Default SQLite path
+let sqlitePath = path.resolve(__dirname, 'dev.sqlite3');
+
+// ✅ Vercel fix (production serverless)
+if (!isPostgres && process.env.NODE_ENV === 'production') {
   sqlitePath = '/tmp/dev.sqlite3';
+
   try {
-    // If we're booting cold on Vercel, copy the seeded database to the writable /tmp directory
-    if (!fs.existsSync(sqlitePath) && fs.existsSync(path.resolve(__dirname, 'dev.sqlite3'))) {
-      fs.copyFileSync(path.resolve(__dirname, 'dev.sqlite3'), sqlitePath);
+    const source = path.resolve(__dirname, 'dev.sqlite3');
+
+    if (fs.existsSync(source) && !fs.existsSync(sqlitePath)) {
+      fs.copyFileSync(source, sqlitePath);
+      console.log('✅ SQLite DB copied to /tmp');
     }
-  } catch(e) {
-    console.error("Vercel sqlite workaround failed", e);
+  } catch (e) {
+    console.error("❌ SQLite workaround failed:", e);
   }
 }
 
+const baseConfig = {
+  client: isPostgres ? 'postgresql' : 'sqlite3',
+  connection: isPostgres
+    ? dbUrl
+    : { filename: sqlitePath },
+  useNullAsDefault: true,
+  migrations: {
+    tableName: 'knex_migrations'
+  }
+};
+
 module.exports = {
-  development: {
-    client: isPostgres ? 'postgresql' : 'sqlite3',
-    connection: isPostgres ? dbUrl : { filename: sqlitePath },
-    useNullAsDefault: true,
-    migrations: {
-      tableName: 'knex_migrations'
-    }
-  },
+  development: baseConfig,
 
   production: {
-    client: isPostgres ? 'postgresql' : 'sqlite3',
-    connection: isPostgres ? (dbUrl + (dbUrl.includes('?') ? '&' : '?') + 'sslmode=require') : { filename: sqlitePath },
-    useNullAsDefault: true,
+    ...baseConfig,
+    connection: isPostgres
+      ? (dbUrl + (dbUrl.includes('?') ? '&' : '?') + 'sslmode=require')
+      : { filename: sqlitePath },
     pool: {
-      min: 2,
-      max: 10
-    },
-    migrations: {
-      tableName: 'knex_migrations'
+      min: 0,
+      max: 5 // 🔥 safer for serverless
     }
   }
 };
