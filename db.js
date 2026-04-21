@@ -1,18 +1,12 @@
 const knex = require('knex');
 const knexfile = require('./knexfile');
-const path = require('path');
 
-// Force development config (SQLite)
-const environment = process.env.NODE_ENV === 'production'
-    ? 'development'
-    : process.env.NODE_ENV || 'development';
+const environment = process.env.NODE_ENV || 'development';
 
-const configOptions = knexfile[environment];
+console.log("ENV:", environment);
 
-// 🔥 Fix SQLite path for Vercel
-if (configOptions.client === 'sqlite3') {
-    configOptions.connection.filename = path.join('/tmp', 'dev.sqlite3');
-    configOptions.useNullAsDefault = true;
-}
+const config = knexfile[environment];
 
-module.exports = knex(configOptions);
+console.log("DB CONFIG:", config);
+
+module.exports = knex(config);
