@@ -20,7 +20,11 @@ app.use(express.static(publicPath));
 
 const swaggerDoc = require('./swaggerDoc');
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc, {
-  customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.3.0/swagger-ui.min.css'
+  customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.3.0/swagger-ui.min.css',
+  customJs: [
+    'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.3.0/swagger-ui-bundle.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.3.0/swagger-ui-standalone-preset.min.js'
+  ]
 }));
 
 app.use('/api/products', require('./routes/products'));

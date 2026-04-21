@@ -1,9 +1,21 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "index.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "node_modules/swagger-ui-dist/**",
+          "dev.sqlite3"
+        ]
+      }
+    }
+  ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/api/index.js"
+      "dest": "index.js"
     }
   ]
 }
