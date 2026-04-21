@@ -13,27 +13,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Swagger setup
-const swaggerOptions = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'Product List API',
-      version: '1.0.0',
-      description: 'API for backend interview eCommerce product service',
-    },
-    servers: [
-      {
-        url: `http://localhost:${port}`,
-        description: 'Local server'
-      }
-    ]
-  },
-  apis: ['./routes/*.js'],
-};
-
-const swaggerSpec = swaggerJsdoc(swaggerOptions);
-app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+const swaggerDoc = require('./swaggerDoc');
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
 // Routes
 app.use('/api/products', require('./routes/products'));
